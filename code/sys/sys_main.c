@@ -688,7 +688,11 @@ void Sys_SigHandler( int signal )
 main
 =================
 */
+#ifdef __ANDROID__
+int main_android( int argc, char **argv )
+#else
 int main( int argc, char **argv )
+#endif
 {
 	int   i;
 	char  commandLine[ MAX_STRING_CHARS ] = { 0 };

@@ -41,7 +41,12 @@ static float	s_flipMatrix[16] = {
 	0, 0, 0, 1
 };
 
-
+#ifdef __ANDROID__
+void GL_FixState()
+{
+	qglBindTexture (GL_TEXTURE_2D, glState.currenttextures[glState.currenttmu]);
+}
+#endif
 /*
 ** GL_Bind
 */
