@@ -475,9 +475,9 @@ void RB_BeginDrawingView (void) {
 
 	// we will only draw a sun if there was sky rendered in this view
 	backEnd.skyRenderedThisView = qfalse;
-
+#ifndef __ANDROID__ // Broken on Ardreno 320!
 	// clip to the plane of the portal
-	if ( backEnd.viewParms.isPortal ) {
+	if ( backEnd.viewParms.isPortal) {
 		float	plane[4];
 		float	plane2[4];
 
@@ -497,6 +497,7 @@ void RB_BeginDrawingView (void) {
 	} else {
 		qglDisable (GL_CLIP_PLANE0);
 	}
+#endif
 }
 
 

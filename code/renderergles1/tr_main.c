@@ -994,10 +994,29 @@ qboolean R_MirrorViewBySurface (drawSurf_t *drawSurf, int entityNum) {
 	R_MirrorVector (oldParms.or.axis[2], &surface, &camera, newParms.or.axis[2]);
 
 	// OPTIMIZE: restrict the viewport on the mirrored view
+#ifdef __ANDROID__ // Fix for Ardeno, thanks n0n3m4!
+	float plane[4];
+	float oldval=r_znear->value;
 
+	plane[0] = newParms.portalPlane.normal[0];
+	plane[1] = newParms.portalPlane.normal[1];
+	plane[2] = newParms.portalPlane.normal[2];
+	plane[3] = newParms.portalPlane.dist;
+
+	float plane2[4];
+	plane2[0] = DotProduct (newParms.or.axis[0], plane);
+	plane2[1] = DotProduct (newParms.or.axis[1], plane);
+	plane2[2] = DotProduct (newParms.or.axis[2], plane);
+	plane2[3] = DotProduct (plane, newParms.or.origin) - plane[3];
+
+	r_znear->value = -plane2[3]/sqrt(plane2[0]*plane2[0]+plane2[1]*plane2[1]+plane2[2]*plane2[2]);
+#endif
 	// render the mirror view
 	R_RenderView (&newParms);
 
+#ifdef __ANDROID__
+	r_znear->value = oldval;
+#endif
 	tr.viewParms = oldParms;
 
 	return qtrue;

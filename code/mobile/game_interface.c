@@ -154,6 +154,10 @@ void PortableAction(int state, int action)
 		case PORT_ACT_CUSTOM_3:
 			PortableKeyEvent(state,K_F4,0);
 			break;
+        case PORT_ACT_CONSOLE:
+            if (state)
+                PortableCommand("toggleconsole");
+            break;
         }
 	}
 }
@@ -162,7 +166,9 @@ void PortableAction(int state, int action)
 touchscreemode_t PortableGetScreenMode()
 {
 	if ((Key_GetCatcher( ) & KEYCATCH_UI) ||
-		(Key_GetCatcher( ) & KEYCATCH_CGAME) )
+		(Key_GetCatcher( ) & KEYCATCH_CGAME) ||
+		(Key_GetCatcher( ) & KEYCATCH_CONSOLE)
+		)
 	{
 		return TS_MENU;
 	}
