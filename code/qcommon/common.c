@@ -3206,6 +3206,10 @@ void Com_Frame( void ) {
 	if ( com_speeds->integer ) {
 		timeBeforeEvents = Sys_Milliseconds ();
 	}
+#ifdef __ANDROID__
+    void IN_Android_Commands();
+    IN_Android_Commands();
+#endif
 	Com_EventLoop();
 	Cbuf_Execute ();
 

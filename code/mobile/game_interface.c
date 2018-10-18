@@ -74,6 +74,11 @@ void PortableAction(int state, int action)
 
             return;
         }
+        else if( action == PORT_ACT_CONSOLE )
+        {
+            if (state)
+               PortableCommand("toggleconsole");
+        }
     }
     else
     {
@@ -158,6 +163,12 @@ void PortableAction(int state, int action)
             if (state)
                 PortableCommand("toggleconsole");
             break;
+        case PORT_ACT_MP_SCORES:
+            if(state)
+                PortableCommand("+scores");
+            else
+                PortableCommand("-scores");
+            break;
         }
 	}
 }
@@ -167,7 +178,8 @@ touchscreemode_t PortableGetScreenMode()
 {
 	if ((Key_GetCatcher( ) & KEYCATCH_UI) ||
 		(Key_GetCatcher( ) & KEYCATCH_CGAME) ||
-		(Key_GetCatcher( ) & KEYCATCH_CONSOLE)
+		(Key_GetCatcher( ) & KEYCATCH_CONSOLE) ||
+		 !cls.cgameStarted
 		)
 	{
 		return TS_MENU;
@@ -232,7 +244,6 @@ void PortableMove(float fwd, float strafe)
 //======================================================================
 
 //Look up and down
-
 void PortableLookPitch(int mode, float pitch)
 {
 	switch(mode)
@@ -247,7 +258,6 @@ void PortableLookPitch(int mode, float pitch)
 }
 
 //left right
-
 void PortableLookYaw(int mode, float yaw)
 {
 	switch(mode)
@@ -261,17 +271,19 @@ void PortableLookYaw(int mode, float yaw)
 	}
 }
 
-/////////////////////
-// Movement handling
-////
-void CL_AndroidMove( usercmd_t *cmd )
+void IN_Android_Commands()
 {
 	if (quickCommand)
 	{
 		Cmd_ExecuteString(quickCommand);
 		quickCommand = 0;
 	}
-
+}
+/////////////////////
+// Movement handling
+////
+void CL_AndroidMove( usercmd_t *cmd )
+{
 	//cmd->forwardmove += forwardmove * cl_forwardspeed->value * 2; //Always run! (x2)
 	//cmd->rightmove  += sidemove   * cl_sidespeed->value * 2;
 	cmd->forwardmove = ClampChar(cmd->forwardmove + forwardmove * 127 );
