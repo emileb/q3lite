@@ -59,9 +59,16 @@ extern kbutton_t	in_buttons[16];
 
 
 static int zoomed = 0; //toggle zoom
+static int scoresShown = 0;
 void PortableAction(int state, int action)
 {
 	LOGI("PortableAction %d %d",state, action);
+
+	if ((action >= PORT_ACT_CUSTOM_0) && (action <= PORT_ACT_CUSTOM_15))
+    {
+        if( action <= PORT_ACT_CUSTOM_7 )
+            PortableKeyEvent(state, SDL_SCANCODE_H + action - PORT_ACT_CUSTOM_0, 0);
+    }
 
 	if (( PortableGetScreenMode() == TS_MENU ) || ( PortableGetScreenMode() == TS_BLANK )  || ( PortableGetScreenMode() == TS_Y_N ))
     {
@@ -79,6 +86,16 @@ void PortableAction(int state, int action)
             if (state)
                PortableCommand("toggleconsole");
         }
+    }
+    else if( ((action >= PORT_ACT_WEAP0) && (action <= PORT_ACT_WEAP9)) )
+    {
+        int code = 0;
+        if(action == PORT_ACT_WEAP0)
+            code = SDL_SCANCODE_0;
+        else
+            code = SDL_SCANCODE_1 + action - PORT_ACT_WEAP1;
+
+        PortableKeyEvent(state,code, 0);
     }
     else
     {
@@ -147,27 +164,19 @@ void PortableAction(int state, int action)
 			if (state)
 				PortableCommand("weapprev\n");
 			break;
-		case PORT_ACT_CUSTOM_0:
-			PortableKeyEvent(state,K_F1,0);
-			break;
-		case PORT_ACT_CUSTOM_1:
-			PortableKeyEvent(state,K_F2,0);
-			break;
-		case PORT_ACT_CUSTOM_2:
-			PortableKeyEvent(state,K_F3,0);
-			break;
-		case PORT_ACT_CUSTOM_3:
-			PortableKeyEvent(state,K_F4,0);
-			break;
         case PORT_ACT_CONSOLE:
             if (state)
                 PortableCommand("toggleconsole");
             break;
         case PORT_ACT_MP_SCORES:
             if(state)
-                PortableCommand("+scores");
-            else
-                PortableCommand("-scores");
+            {
+                if (scoresShown)
+                    PortableCommand("-scores\n");
+                else
+                    PortableCommand("+scores\n");
+                scoresShown = !scoresShown;
+            }
             break;
         }
 	}
@@ -277,6 +286,14 @@ void IN_Android_Commands()
 	{
 		Cmd_ExecuteString(quickCommand);
 		quickCommand = 0;
+	}
+
+	if( PortableGetScreenMode() == TS_MENU )
+	{
+	    if( look_yaw_joy || look_pitch_joy )
+	    {
+	        Com_QueueEvent( 0, SE_MOUSE, -look_yaw_joy * 10, look_pitch_joy * 10, 0, NULL );
+	    }
 	}
 }
 /////////////////////
