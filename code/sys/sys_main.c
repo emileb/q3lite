@@ -439,7 +439,9 @@ void Sys_Error( const char *error, ... )
 	va_start (argptr,error);
 	Q_vsnprintf (string, sizeof(string), error, argptr);
 	va_end (argptr);
-
+#ifdef __ANDROID__
+	CON_Print( string );
+#endif
 	Sys_ErrorDialog( string );
 
 	Sys_Exit( 3 );

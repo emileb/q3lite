@@ -35,7 +35,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include <android/log.h>
 #define LOGI(...)  __android_log_print(ANDROID_LOG_INFO,"Q3LITE",__VA_ARGS__)
-
+#include "LogWritter.h"
 /*
 ==================
 CON_Shutdown
@@ -72,4 +72,5 @@ CON_Print
 void CON_Print( const char *msg )
 {
 	LOGI("%s",msg);
+	LogWritter_Write(msg);
 }
