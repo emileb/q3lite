@@ -81,7 +81,7 @@ static qboolean	winsockInitialized = qfalse;
 #	include <sys/time.h>
 #	include <unistd.h>
 #	if !defined(__sun) && !defined(__sgi)
-#		include <ifaddrs.h>
+#		include "mobile/ifaddrs.h"
 #	endif
 
 #	ifdef __sun
@@ -1275,7 +1275,7 @@ static void NET_AddLocalAddress(char *ifname, struct sockaddr *addr, struct sock
 	}
 }
 
-#if defined(__linux__) || defined(__APPLE__) || defined(__BSD__)
+#if !defined(__ANDROID__) && defined(__linux__) || defined(__APPLE__) || defined(__BSD__)
 static void NET_GetLocalAddress(void)
 {
 	struct ifaddrs *ifap, *search;

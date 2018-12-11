@@ -42,7 +42,6 @@ PROJECT_FILES := $(PROJECT_FILES:$(LOCAL_PATH)/%=%)
 PROJECT_FILES +=    sys/con_log.c \
                     sys/sys_main.c \
                     sys/sys_unix.c \
-                    mobile/ifaddrs.c \
                     mobile/con_android.c \
                     mobile/game_interface.c \
                     ../../../Clibs_OpenTouch/quake/android_jni.cpp \
@@ -81,5 +80,8 @@ LOCAL_SRC_FILES =  $(PROJECT_FILES)
 LOCAL_LDLIBS := -lEGL -ldl -llog -lOpenSLES -lz -lGLESv1_CM
 LOCAL_STATIC_LIBRARIES := sigc libzip libpng logwritter license_static SDL2_net
 LOCAL_SHARED_LIBRARIES := touchcontrols SDL2  SDL2_mixer
+
+#LOCAL_LDFLAGS += -fsanitize=address
+#LOCAL_CFLAGS += -fsanitize=address  -O1 -fno-omit-frame-pointer -fno-optimize-sibling-calls
 
 include $(BUILD_SHARED_LIBRARY)

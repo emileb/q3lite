@@ -763,11 +763,15 @@ int main( int argc, char **argv )
 	Com_Init( commandLine );
 	NET_Init( );
 
+    Com_Printf ("NET_Init Complete ---\n");
+
 	signal( SIGILL, Sys_SigHandler );
 	signal( SIGFPE, Sys_SigHandler );
 	signal( SIGSEGV, Sys_SigHandler );
 	signal( SIGTERM, Sys_SigHandler );
 	signal( SIGINT, Sys_SigHandler );
+
+    Com_Printf ("signals Complete ---\n");
 
 	while( 1 )
 	{
