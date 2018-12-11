@@ -334,7 +334,7 @@ A "connect" OOB command has been received
 
 void SV_DirectConnect( netadr_t from ) {
 	char		userinfo[MAX_INFO_STRING];
-	int			i;
+	int			i, n;
 	client_t	*cl, *newcl;
 	client_t	temp;
 	sharedEntity_t *ent;
@@ -346,7 +346,7 @@ void SV_DirectConnect( netadr_t from ) {
 	int			startIndex;
 	intptr_t		denied;
 	int			count;
-	char		*ip;
+	char		*ip, *info;
 #ifdef LEGACY_PROTOCOL
 	qboolean	compat = qfalse;
 #endif
@@ -360,7 +360,33 @@ void SV_DirectConnect( netadr_t from ) {
 		return;
 	}
 
-	Q_strncpyz( userinfo, Cmd_Argv(1), sizeof(userinfo) );
+	// Prevent using connect as an amplifier
+	if ( SVC_RateLimitAddress( from, 10, 1000 ) ) {
+		if ( com_developer->integer ) {
+			Com_Printf( "SV_DirectConnect: rate limit from %s exceeded, dropping request\n",
+				NET_AdrToString( from ) );
+		}
+		return;
+	}
+
+	// check for concurrent connections
+	if ( sv_maxconcurrent->integer > 0 ) {
+		for ( i = 0, n = 0; i < sv_maxclients->integer; i++ ) {
+			netadr_t addr = svs.clients[ i ].netchan.remoteAddress;
+			if ( addr.type != NA_BOT && NET_CompareBaseAdr( addr, from ) ) {
+				if ( svs.clients[ i ].state >= CS_CONNECTED && !svs.clients[ i ].justConnected ) {
+					if ( ++n >= sv_maxconcurrent->integer ) {
+						NET_OutOfBandPrint( NS_SERVER, from, "print\nToo many connections\n" );
+						return;
+					}
+				}
+			}
+		}
+	}
+
+	info = Cmd_Argv( 1 );
+
+	Q_strncpyz( userinfo, info, sizeof(userinfo) );
 
 	version = atoi(Info_ValueForKey(userinfo, "protocol"));
 	
@@ -379,7 +405,8 @@ void SV_DirectConnect( netadr_t from ) {
 		}
 	}
 
-	challenge = atoi( Info_ValueForKey( userinfo, "challenge" ) );
+	// verify challenge in first place
+	challenge = atoi( Info_ValueForKey( info, "challenge" ) );
 	qport = atoi( Info_ValueForKey( userinfo, "qport" ) );
 
 	// quick reject
@@ -594,6 +621,7 @@ gotnewcl:
 	newcl->lastSnapshotTime = 0;
 	newcl->lastPacketTime = svs.time;
 	newcl->lastConnectTime = svs.time;
+	newcl->justConnected = qtrue;
 	
 	// when we receive the first packet from the client, we will
 	// notice that it is from a different serverid and that the
@@ -686,18 +714,16 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 
 	if ( isBot ) {
 		SV_BotFreeClient( drop - svs.clients );
-	}
 
-	// nuke user info
-	SV_SetUserinfo( drop - svs.clients, "" );
-	
-	if ( isBot ) {
 		// bots shouldn't go zombie, as there's no real net connection.
 		drop->state = CS_FREE;
 	} else {
 		Com_DPrintf( "Going to CS_ZOMBIE for %s\n", drop->name );
 		drop->state = CS_ZOMBIE;		// become free in a few seconds
 	}
+
+	// nuke user info
+	SV_SetUserinfo( drop - svs.clients, "" );
 
 	// if this was the last client on the server, send a heartbeat
 	// to the master so it is known the server is empty
@@ -818,6 +844,9 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 		memcpy(&client->lastUsercmd, cmd, sizeof(client->lastUsercmd));
 	else
 		memset(&client->lastUsercmd, '\0', sizeof(client->lastUsercmd));
+
+	client->inactivityTime = sv.time + sv_inactivity->integer * 1000;
+	client->inactivityWarning = qfalse;
 
 	// call the game begin function
 	VM_Call( gvm, GAME_CLIENT_BEGIN, client - svs.clients );
@@ -1661,6 +1690,72 @@ static qboolean SV_ClientCommand( client_t *cl, msg_t *msg ) {
 
 
 /*
+=================
+SV_MoveClientToSpec
+=================
+*/
+void SV_MoveClientToSpec( int clientNum, const char *reason ) {
+	Com_Printf( "Forcing player %d to spectate\n", clientNum );
+
+	Cbuf_ExecuteText( EXEC_NOW, va( "forceteam %d spectator\n", clientNum ) );
+
+	SV_SendServerCommand( svs.clients + clientNum, "cp \"%s\"", reason );
+}
+
+/*
+=================
+ClientInactivityTimer
+
+Returns qfalse if the client is dropped
+=================
+*/
+qboolean ClientInactivityTimer( client_t *client ) {
+	char	info[MAX_INFO_STRING];
+	int     team;
+	char	intermission[10];
+	char	warmup[10];
+
+	if ( client->netchan.remoteAddress.type == NA_BOT ) {
+		return qtrue;
+	}
+
+	SV_GetConfigstring( CS_INTERMISSION, intermission, sizeof ( intermission ) );
+	SV_GetConfigstring( CS_WARMUP, warmup, sizeof ( warmup ) );
+	SV_GetConfigstring( CS_PLAYERS + (int)(client - svs.clients), info, sizeof ( info ) );
+
+	team = atoi( Info_ValueForKey( info, "t" ) );
+
+	if ( !sv_inactivity->integer ||
+		team == TEAM_SPECTATOR ||
+		client->lastUsercmd.forwardmove ||
+		client->lastUsercmd.rightmove ||
+		client->lastUsercmd.upmove ||
+		(client->lastUsercmd.buttons & BUTTON_ATTACK) ||
+		intermission[0] == '1' || warmup[0] == '1') {
+
+		if ( sv_inactivity->integer ) {
+			client->inactivityTime = sv.time + sv_inactivity->integer * 1000;
+		} else {
+			// give everyone some time, so if the operator sets sv_inactivity during
+			// gameplay, everyone isn't kicked
+			client->inactivityTime = sv.time + 60 * 1000;
+		}
+
+		client->inactivityWarning = qfalse;
+	} else if ( client->netchan.remoteAddress.type != NA_LOOPBACK ) {
+		if ( sv.time > client->inactivityTime ) {
+			SV_MoveClientToSpec( client - svs.clients, "^1You've been moved to spectator\n^1for idling too long.\n" );
+			return qfalse;
+		}
+		if ( sv.time > client->inactivityTime - 10000 && !client->inactivityWarning ) {
+			client->inactivityWarning = qtrue;
+			SV_SendServerCommand( client, "cp \"Ten seconds until inactivity drop!\n\"" );
+		}
+	}
+	return qtrue;
+}
+
+/*
 ==================
 SV_ClientThink
 
@@ -1672,6 +1767,11 @@ void SV_ClientThink (client_t *cl, usercmd_t *cmd) {
 
 	if ( cl->state != CS_ACTIVE ) {
 		return;		// may have been kicked during the last usercmd
+	}
+
+	// check for inactivity timer, but never drop the local client of a non-dedicated server
+	if ( !ClientInactivityTimer( cl ) ) {
+		return;
 	}
 
 	VM_Call( gvm, GAME_CLIENT_THINK, cl - svs.clients );
@@ -1692,9 +1792,9 @@ each of the backup packets.
 static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 	int			i, key;
 	int			cmdCount;
-	usercmd_t	nullcmd;
-	usercmd_t	cmds[MAX_PACKET_USERCMDS];
-	usercmd_t	*cmd, *oldcmd;
+	static usercmd_t nullcmd = { 0 };
+	usercmd_t   cmds[MAX_PACKET_USERCMDS], *cmd;
+	usercmd_t   *oldcmd;
 
 	if ( delta ) {
 		cl->deltaMessage = cl->messageAcknowledge;
@@ -1721,7 +1821,6 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta ) {
 	// also use the last acknowledged server command in the key
 	key ^= MSG_HashKey(cl->reliableCommands[ cl->reliableAcknowledge & (MAX_RELIABLE_COMMANDS-1) ], 32);
 
-	Com_Memset( &nullcmd, 0, sizeof(nullcmd) );
 	oldcmd = &nullcmd;
 	for ( i = 0 ; i < cmdCount ; i++ ) {
 		cmd = &cmds[i];
@@ -1945,6 +2044,9 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 		cl->reliableAcknowledge = cl->reliableSequence;
 		return;
 	}
+
+	cl->justConnected = qfalse;
+
 	// if this is a usercmd from a previous gamestate,
 	// ignore it or retransmit the current gamestate
 	// 
@@ -1965,7 +2067,7 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 		}
 		// if we can tell that the client has dropped the last
 		// gamestate we sent them, resend it
-		if ( cl->messageAcknowledge > cl->gamestateMessageNum ) {
+		if ( cl->state != CS_ACTIVE && cl->messageAcknowledge > cl->gamestateMessageNum ) {
 			Com_DPrintf( "%s : dropped gamestate, resending\n", cl->name );
 			SV_SendClientGameState( cl );
 		}

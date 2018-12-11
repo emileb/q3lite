@@ -34,37 +34,55 @@ These cvars are in addition to those currently available in the base game. All n
 ```
 Client cvars:
 
-  cg_drawSpeedometer <0|1>          - Toggle display of player speed in  
-                                      Quake units per second.  Speed shown in  
-                                      upper right corner under the match clock.  
-                                      Also works with demos and while following  
-                                      other players in spectator mode.  
-                                      0 = disabled.  
-                                      1 = enabled.  
+  cg_drawSpeedometer <0|1>          - Toggle display of player speed in
+                                      Quake units per second.  Speed shown in
+                                      upper right corner under the match clock.
+                                      Also works with demos and while following
+                                      other players in spectator mode.
+                                      0 = disabled.
+                                      1 = enabled.
 
-  cg_nochatbeeps <0|1|2|3>          - Toggle playing of the chat beep sound.  
-                                      Handy on servers with chatty spectators.  
-                                      0 = disabled.  
-                                      1 = No chat beeps for non-team chat only.  
-                                      2 = No chat beeps for team chat only.  
-                                      3 = No chat beeps for team / non-team chat.  
+  cg_nochatbeeps <0|1|2|3>          - Toggle playing of the chat beep sound.
+                                      Handy on servers with chatty spectators.
+                                      0 = disabled.
+                                      1 = No chat beeps for non-team chat only.
+                                      2 = No chat beeps for team chat only.
+                                      3 = No chat beeps for team / non-team chat.
 
-  cg_novotebeeps <0|1|2|3>          - Toggle playing of the vote beep sound.  
-                                      0 = disabled.  
-                                      1 = No vote beeps for non-team votes only.  
-                                      2 = No vote beeps for team votes only.  
-                                      3 = No vote beeps for team / non-team votes.  
+  cg_novotebeeps <0|1|2|3>          - Toggle playing of the vote beep sound.
+                                      0 = disabled.
+                                      1 = No vote beeps for non-team votes only.
+                                      2 = No vote beeps for team votes only.
+                                      3 = No vote beeps for team / non-team votes.
+
+  cg_noTaunts <0|1>                 - Toggle playing of client taunt sounds.
+                                      Useful when opponents press the taunt
+                                      key excessively.
+                                      0 = disabled.
+                                      1 = No taunt sounds played.
 
 Server cvars:
 
-  g_intermissionDuration <seconds>  - Limits end-of-round intermission duration.  
-                                      Prevents endless intermission if a human  
-                                      player is away from the keyboard.  
-                                      0 = disabled.  
-                                      > 0 = intermission duration in seconds,  
-                                      then server moves to the next map.  
-                                      Valid range 5 - 30 seconds.  
+  g_intermissionDuration <seconds>  - Limits end-of-round intermission duration.
+                                      Prevents endless intermission if a human
+                                      player is away from the keyboard.
+                                      0 = disabled.
+                                      > 0 = intermission duration in seconds,
+                                      then server moves to the next map.
+                                      Valid range 5 - 30 seconds.
 
+  sv_inactivity <seconds>           - Move player to spectator mode after a
+                                      period of inactivity rather than kick them
+                                      as g_inactivity does. Set to a lower value
+                                      than g_inactivity if both are used.
+                                      0 = disabled.
+                                      > 0 = inactivity period in seconds, then
+                                      server moves player to spectator mode.
+
+  sv_maxconcurrent <0|1..64>        - Limits the number of simultaneous player
+                                      connections from the same IP address.
+                                      0 = disabled.
+                                      Valid range 1 - 64.
 ```
 
 ### Getting Started
@@ -121,12 +139,13 @@ Please submit patches as a GitHub pull request.
 
   * Quake III Arena [source code](https://github.com/id-Software/Quake-III-Arena) - [id software](http://www.idsoftware.com)
   * ioquake3 contributors - [github.com/ioquake/ioq3](https://github.com/ioquake/ioq3)
-  * SDL - [https://www.libsdl.org/](https://www.libsdl.org/)
-  * twolife - [github.com/twolife/ioq3](https://github.com/twolife/ioq3)
-  * ptitSeb - [github.com/ptitSeb/ioq3](https://github.com/ptitSeb/ioq3)
-  * q3mme - [github.com/entdark/q3mme](https://github.com/entdark/q3mme)
   * Quake3e - [github.com/ec-/Quake3e](https://github.com/ec-/Quake3e)
-  * Uber Demo Tools - [mightycow/uberdemotools](https://github.com/mightycow/uberdemotools)
+  * SDL - [libsdl.org](https://www.libsdl.org)
+  * Open Arena - [github.com/OpenArena](https://github.com/OpenArena)
+  * ptitSeb - [github.com/ptitSeb/ioq3](https://github.com/ptitSeb/ioq3)
+  * twolife - [github.com/twolife/ioq3](https://github.com/twolife/ioq3)
+  * q3mme - [github.com/entdark/q3mme](https://github.com/entdark/q3mme)
+  * Uber Demo Tools - [github.com/mightycow/uberdemotools](https://github.com/mightycow/uberdemotools)
   * and many other contributors
 
 
