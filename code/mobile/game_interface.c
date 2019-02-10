@@ -9,8 +9,8 @@
 #include "..//client/client.h"
 #include "..//renderergl1/tr_local.h"
 
-static float look_pitch_mouse,look_pitch_abs,look_pitch_joy;
-static float look_yaw_mouse,look_yaw_joy;;
+static float look_pitch_mouse, look_pitch_joy;
+static float look_yaw_mouse, look_yaw_joy;;
 
 
 int main_android (int c, const char **v);
@@ -35,7 +35,7 @@ int PortableKeyEvent(int state, int code ,int unitcode)
 	return 0;
 }
 
-static char * quickCommand = 0;
+static const char * quickCommand = 0;
 void PortableCommand(const char * cmd)
 {
 	quickCommand = cmd;
@@ -85,6 +85,17 @@ void PortableAction(int state, int action)
         {
             if (state)
                PortableCommand("toggleconsole");
+        }
+        else if ( action == PORT_ACT_MOUSE_LEFT || action == PORT_ACT_MOUSE_RIGHT )
+        {
+            int b = K_MOUSE1;
+
+            if( action == PORT_ACT_MOUSE_LEFT )
+                b = K_MOUSE1;
+            else if( action == PORT_ACT_MOUSE_RIGHT )
+                b = K_MOUSE2;
+
+        	Com_QueueEvent( 0, SE_KEY, b, state ? qtrue : qfalse, 0, NULL );
         }
     }
     else if( ((action >= PORT_ACT_WEAP0) && (action <= PORT_ACT_WEAP9)) )
@@ -219,6 +230,7 @@ void PortableMouse(float dx,float dy)
 
 	Com_QueueEvent( 0, SE_MOUSE, -dx, -dy, 0, NULL );
 }
+
 
 // =================== FORWARD and SIDE MOVMENT ==============
 
