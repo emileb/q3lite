@@ -227,7 +227,11 @@ qboolean SNDDMA_Init(void)
 		tmp = 16;
 
 	desired.freq = (int) s_sdlSpeed->value;
+#ifdef __ANDROID__
+    if(!desired.freq) desired.freq = 44100;
+#else
 	if(!desired.freq) desired.freq = 22050;
+#endif
 	desired.format = ((tmp == 16) ? AUDIO_S16SYS : AUDIO_U8);
 
 	// I dunno if this is the best idea, but I'll give it a try...
