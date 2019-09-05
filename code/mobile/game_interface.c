@@ -311,7 +311,7 @@ void IN_Android_Commands()
 /////////////////////
 // Movement handling
 ////
-void CL_AndroidMove( usercmd_t *cmd )
+void CL_AndroidMove( usercmd_t *cmd, float frame_msec )
 {
 	//cmd->forwardmove += forwardmove * cl_forwardspeed->value * 2; //Always run! (x2)
 	//cmd->rightmove  += sidemove   * cl_sidespeed->value * 2;
@@ -320,12 +320,12 @@ void CL_AndroidMove( usercmd_t *cmd )
 
 	cl.viewangles[PITCH] += -look_pitch_mouse * 300;
 	look_pitch_mouse = 0;
-	cl.viewangles[PITCH] += look_pitch_joy * 6;
+	cl.viewangles[PITCH] += look_pitch_joy * 6 * (frame_msec / 16.f); // Presume was scaled at 60FPS;
 
 
 	cl.viewangles[YAW] += look_yaw_mouse * 500;
 	look_yaw_mouse = 0;
-	cl.viewangles[YAW] += look_yaw_joy * 6;
+	cl.viewangles[YAW] += look_yaw_joy * 6 * (frame_msec / 16.f); // Presume was scaled at 60FPS;
 }
 /*
 void IN_Move_Android (float *movements, int pnum, float frametime)

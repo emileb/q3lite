@@ -577,7 +577,7 @@ void CL_FinishMove( usercmd_t *cmd ) {
 }
 
 #ifdef __ANDROID__
-void CL_AndroidMove( usercmd_t *cmd );
+void CL_AndroidMove( usercmd_t *cmd, float frame_msec  );
 #endif
 /*
 =================
@@ -607,7 +607,7 @@ usercmd_t CL_CreateCmd( void ) {
 	CL_JoystickMove( &cmd );
 
 #ifdef __ANDROID__
-	CL_AndroidMove( &cmd );
+	CL_AndroidMove( &cmd, frame_msec  );
 #endif
 
 	// check to make sure the angles haven't wrapped
