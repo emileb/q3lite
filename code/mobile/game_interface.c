@@ -313,6 +313,10 @@ void IN_Android_Commands()
 ////
 void CL_AndroidMove( usercmd_t *cmd, float frame_msec )
 {
+    int blockGamepad( void );
+    if( blockGamepad() )
+        return;
+
 	//cmd->forwardmove += forwardmove * cl_forwardspeed->value * 2; //Always run! (x2)
 	//cmd->rightmove  += sidemove   * cl_sidespeed->value * 2;
 	cmd->forwardmove = ClampChar(cmd->forwardmove + forwardmove * 127 );
