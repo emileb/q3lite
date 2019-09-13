@@ -314,22 +314,27 @@ void IN_Android_Commands()
 void CL_AndroidMove( usercmd_t *cmd, float frame_msec )
 {
     int blockGamepad( void );
-    if( blockGamepad() )
-        return;
-
-	//cmd->forwardmove += forwardmove * cl_forwardspeed->value * 2; //Always run! (x2)
-	//cmd->rightmove  += sidemove   * cl_sidespeed->value * 2;
-	cmd->forwardmove = ClampChar(cmd->forwardmove + forwardmove * 127 );
-	cmd->rightmove = ClampChar(cmd->rightmove + sidemove * 127 );
-
-	cl.viewangles[PITCH] += -look_pitch_mouse * 300;
-	look_pitch_mouse = 0;
-	cl.viewangles[PITCH] += look_pitch_joy * 6 * (frame_msec / 16.f); // Presume was scaled at 60FPS;
+    int blockMove = blockGamepad() & ANALOGUE_AXIS_FWD;
+    int blockLook = blockGamepad() & ANALOGUE_AXIS_PITCH;
 
 
-	cl.viewangles[YAW] += look_yaw_mouse * 500;
-	look_yaw_mouse = 0;
-	cl.viewangles[YAW] += look_yaw_joy * 6 * (frame_msec / 16.f); // Presume was scaled at 60FPS;
+    if( !blockMove )
+    {
+	    cmd->forwardmove = ClampChar(cmd->forwardmove + forwardmove * 127 );
+	    cmd->rightmove = ClampChar(cmd->rightmove + sidemove * 127 );
+    }
+
+    if( !blockLook )
+    {
+        cl.viewangles[PITCH] += -look_pitch_mouse * 300;
+        look_pitch_mouse = 0;
+        cl.viewangles[PITCH] += look_pitch_joy * 6 * (frame_msec / 16.f); // Presume was scaled at 60FPS;
+
+
+        cl.viewangles[YAW] += look_yaw_mouse * 500;
+        look_yaw_mouse = 0;
+        cl.viewangles[YAW] += look_yaw_joy * 6 * (frame_msec / 16.f); // Presume was scaled at 60FPS;
+	}
 }
 /*
 void IN_Move_Android (float *movements, int pnum, float frametime)
