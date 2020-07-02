@@ -184,7 +184,10 @@ static void SNDDMA_PrintAudiospec(const char *str, const SDL_AudioSpec *spec)
 	Com_Printf( "  Samples:  %d\n", (int) spec->samples );
 	Com_Printf( "  Channels: %d\n", (int) spec->channels );
 }
-
+#ifdef __ANDROID__
+extern int AUDIO_OVERRIDE_FREQ;
+extern int AUDIO_OVERRIDE_SAMPLES;
+#endif
 /*
 ===============
 SNDDMA_Init
@@ -250,6 +253,14 @@ qboolean SNDDMA_Init(void)
 		else
 			desired.samples = 2048;  // (*shrug*)
 	}
+
+#ifdef __ANDROID__
+    if (AUDIO_OVERRIDE_FREQ != 0)
+        desired.freq = AUDIO_OVERRIDE_FREQ;
+
+    if (AUDIO_OVERRIDE_SAMPLES != 0)
+        desired.samples = AUDIO_OVERRIDE_SAMPLES;
+#endif
 
 	desired.channels = (int) s_sdlChannels->value;
 	desired.callback = SNDDMA_AudioCallback;
