@@ -9,6 +9,8 @@
 #include "..//client/client.h"
 #include "..//renderergl1/tr_local.h"
 
+#include "SmartToggle.h"
+
 static float look_pitch_mouse, look_pitch_joy;
 static float look_yaw_mouse, look_yaw_joy;;
 
@@ -45,10 +47,16 @@ void KeyUpPort (kbutton_t *b)
 {
 	b->active = qfalse;
 }
+
 void KeyDownPort (kbutton_t *b)
 {
 	b->active = qtrue;
 	b->wasPressed = qtrue;
+}
+
+static int KeyIsDown (kbutton_t *b)
+{
+	return b->active;
 }
 
 extern kbutton_t	in_left, in_right, in_forward, in_back;
@@ -142,13 +150,19 @@ void PortableAction(int state, int action)
 			(state)?KeyDownPort(&in_speed):KeyUpPort(&in_speed);
 			break;
 		case PORT_ACT_ZOOM_IN:
-			if (state)
 			{
-				if (zoomed)
-					PortableCommand("-zoom\n");
-				else
+				static SmartToggle_t smartToggle;
+				int activate = SmartToggleAction( &smartToggle, state, zoomed);
+				if(activate)
+				{
+					zoomed = 1;
 					PortableCommand("+zoom\n");
-				zoomed = !zoomed;
+				}
+				else
+				{
+					zoomed = 0;
+					PortableCommand("-zoom\n");
+				}
 			}
 			break;
 		case PORT_ACT_USE:
@@ -163,7 +177,11 @@ void PortableAction(int state, int action)
 			(state)?KeyDownPort(&in_up):KeyUpPort(&in_up);
 			break;
 		case PORT_ACT_DOWN:
-			(state)?KeyDownPort(&in_down):KeyUpPort(&in_down);
+			{
+				static SmartToggle_t smartToggle;
+				int activate = SmartToggleAction( &smartToggle, state, KeyIsDown(&in_down));
+				(activate)?KeyDownPort(&in_down):KeyUpPort(&in_down);
+			}
 			break;
 			//TODO make fifo, possibly not thread safe!!
 		case PORT_ACT_NEXT_WEP:
