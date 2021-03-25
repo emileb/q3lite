@@ -46,6 +46,7 @@ PROJECT_FILES +=    sys/con_log.c \
                     mobile/game_interface.c \
                     ../../../Clibs_OpenTouch/quake/android_jni.cpp \
                     ../../../Clibs_OpenTouch/quake/touch_interface.cpp \
+                    ../../../Clibs_OpenTouch/touch_interface_base.cpp
 
 EXCLUDE :=  qcommon/vm_x86.c \
             qcommon/vm_armv7l.c \
